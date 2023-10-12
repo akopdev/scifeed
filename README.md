@@ -1,4 +1,4 @@
-# Scifeed
+# SciFeed
 Create a personalized feed filled with links to research papers from top-notch scientific website.
 
 Feed will be generated in JSON format, which is supported by many RSS readers include NetNewsWire, NewsBlur, ReadKit and Reeder.
@@ -9,6 +9,9 @@ Feed will be generated in JSON format, which is supported by many RSS readers in
 ## Installation
 
 For the first time, you need to install the dependencies and start the server.
+
+> You still need to install azure functions environment manually  on your machine. Please refer to 
+> [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=macos%2Ccsharp%2Cbash#v2) for more details.
 
 ```bash
 make init install start
