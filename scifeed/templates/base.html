@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" data-bs-theme="auto">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Akop Kesheshyan">
+  {% block head %}
+  <title>SciFeed - receive Google Scholar alerts via rss feed </title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  {% endblock %}
+  <style>
+    .container {
+      max-width: 960px;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <header class="sticky-top">
+      <div class="bg-body-tertiary border-bottom border-body">
+        <div class="container">
+          <nav class="navbar row">
+            <a class="navbar-brand col-1 d-none d-sm-block" href="/">SciFeed</a>
+            <form class="d-flex navbar-form navbar-right col-12 col-sm-10" role="search" method="post">
+              <div class="input-group">
+                <input type="text" name="query" value="{{ query }}" class="form-control rounded-0" aria-label="query"
+                  autofocus>
+                <span class="input-group-text p-0"><button type="submit" class="btn btn-primary rounded-0"><i
+                      class="bi bi-search"></i></button></span>
+              </div>
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+            </form>
+          </nav>
+        </div>
+      </div>
+      {% block subheader %}{% endblock %}
+    </header>
+    <div class="py-3">
+      <div class="container">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </main>
+<div class="container">
+  <footer class="py-3 my-4">
+    <p class="text-center text-body-secondary">&copy; Akop Kesheshyan</p>
+  </footer>
+</div>
+</body>
+
+</html>

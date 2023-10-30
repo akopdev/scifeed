@@ -4,3 +4,44 @@
 #
 #    pip-compile requirements-dev.in
 #
+certifi==2023.7.22
+    # via requests
+charset-normalizer==3.3.1
+    # via requests
+click==8.1.7
+    # via safety
+dparse==0.6.3
+    # via safety
+flake8==6.1.0
+    # via -r requirements-dev.in
+idna==3.4
+    # via requests
+mccabe==0.7.0
+    # via flake8
+packaging==21.3
+    # via
+    #   dparse
+    #   safety
+pycodestyle==2.11.1
+    # via flake8
+pydocstyle==6.3.0
+    # via -r requirements-dev.in
+pyflakes==3.1.0
+    # via flake8
+pyparsing==3.1.1
+    # via packaging
+requests==2.31.0
+    # via safety
+ruamel-yaml==0.18.3
+    # via safety
+ruamel-yaml-clib==0.2.8
+    # via ruamel-yaml
+safety==2.3.5
+    # via -r requirements-dev.in
+snowballstemmer==2.2.0
+    # via pydocstyle
+urllib3==2.0.7
+    # via requests
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
