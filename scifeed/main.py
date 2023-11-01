@@ -9,6 +9,8 @@ app = FastAPI()
 
 templates = Jinja2Templates(directory="scifeed/templates")
 
+scholar = GoogleScholar()
+
 
 @app.get("/")
 async def main(request: Request):
@@ -21,13 +23,13 @@ async def preview(request: Request):
     form = await request.form()
     query = form.get("query")
     if query:
-        results = await GoogleScholar().fetch_all(query)
+        results = await scholar.fetch_all(query)
     return templates.TemplateResponse(
         "preview.html", {"request": request, "query": query, "results": results}
     )
 
 
 @app.get("/scholar")
-async def scholar(q: str, limit: int = 50):
-    items = await GoogleScholar().fetch_all(q, limit)
+async def get_scholar(q: str, limit: int = 50):
+    items = await scholar.fetch_all(q, limit=limit)
     return Feed(title=f"Google Scholar | {q}", items=items)

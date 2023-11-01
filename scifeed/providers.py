@@ -2,7 +2,8 @@ import asyncio
 import itertools
 import random
 import re
-from typing import Any, Dict, List
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Tuple
 
 import aiohttp
 
@@ -21,6 +22,14 @@ class DataProvider:
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15",  # noqa
     ]
 
+    _cache_timeout = 60
+
+    def __init__(self):
+        self._cache: Dict[str, Tuple[datetime, Dict[str, str]]] = {}
+
+    def encode_query(self, query: str) -> str:
+        return query.replace(" ", "").lower()
+
     async def get(self, url: str, params: Dict[str, Any]) -> str:
         """Get data from a URL with random user agent."""
         async with aiohttp.ClientSession() as session:
@@ -36,13 +45,20 @@ class DataProvider:
         """Fetch results for a given query from a single page."""
         raise NotImplementedError
 
-    async def fetch_all(
-        self, query: str, start: int = 0, limit: int = 50
-    ) -> List[Dict[str, str]]:
+    async def fetch_all(self, query: str, start: int = 0, limit: int = 50) -> List[Dict[str, str]]:
         """Fetch all results for a given query from all pages."""
-        tasks = [self.fetch(query, page) for page in range(0, limit, 10)]
+        key = self.encode_query(query)
+        if cached := self._cache.get(key):
+            if cached[0] >= (datetime.utcnow() - timedelta(minutes=self._cache_timeout)):
+                return cached[1]
+        tasks = [self.fetch(query, page) for page in range(start, limit, 10)]
         items = await asyncio.gather(*tasks)
-        return list(itertools.chain(*items))
+        result = list(itertools.chain(*items))
+        self._cache[key] = (
+            datetime.utcnow(),
+            result,
+        )
+        return result
 
 
 class GoogleScholar(DataProvider):
