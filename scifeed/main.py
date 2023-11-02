@@ -43,4 +43,4 @@ async def preview(request: Request):
 
 @app.get("/feed")
 async def feed(q: str, limit: int = 50):
-    return Feed(title=f"Google Scholar | {q}", items=await fetch(q, limit=limit))
+    return Feed(title=f"SciFeed | {q}", items=await fetch(q, limit=limit))
