@@ -49,13 +49,13 @@ class DataProvider:
         """Fetch all results for a given query from all pages."""
         key = self.encode_query(query)
         if cached := self._cache.get(key):
-            if cached[0] >= (datetime.utcnow() - timedelta(minutes=self._cache_timeout)):
+            if cached[0] >= datetime.utcnow():
                 return cached[1]
         tasks = [self.fetch(query, page) for page in range(start, limit, 10)]
         items = await asyncio.gather(*tasks)
         result = list(itertools.chain(*items))
         self._cache[key] = (
-            datetime.utcnow(),
+            datetime.utcnow() + timedelta(minutes=self._cache_timeout),
             result,
         )
         return result
