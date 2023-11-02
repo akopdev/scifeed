@@ -18,11 +18,12 @@
     <div class="col">
         <div class="card">
             <div class="card-body">
-                <div class="card-title">
-                    <a href="{{ item.url }}" target="blank">{{ item.title }}</a>
-                </div>
+                <h5 class="card-title">
+                    <a href="{{ item.url }}" class="link-underline link-underline-opacity-0 link-underline-opacity-75-hover" target="blank">{{ item.title }}</a>
+                </h5>
                 <div class="card-text">{{ item.description }}</div>
             </div>
+            <div class="card-footer">{{ item.provider }}</div>
         </div>
     </div>
     {% endfor %}

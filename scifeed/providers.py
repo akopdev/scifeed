@@ -62,6 +62,8 @@ class DataProvider:
 
 
 class GoogleScholar(DataProvider):
+    name = "Google Scholar"
+
     async def fetch(self, query: str, start: int = 0) -> List[Item]:
         html = await self.get(
             "https://scholar.google.com/scholar",
@@ -76,11 +78,12 @@ class GoogleScholar(DataProvider):
             clean = re.compile("<.*?>")
             for header in headers:
                 title = re.sub(clean, "", header[1])
-                result.append(Item(url=header[0], id=header[0], title=title))
+                result.append(Item(url=header[0], id=header[0], title=title, provider=self.name))
         return result
 
 
 class PubMed(DataProvider):
+    name = "PubMed"
     url = "https://pubmed.ncbi.nlm.nih.gov"
 
     async def fetch(self, query: str, start: int = 0) -> List[Item]:
@@ -88,12 +91,19 @@ class PubMed(DataProvider):
         result = []
         if html:
             headers = re.findall(
-                r'<div class="docsum-content">.+?<a.+? class="docsum-title".+?href="(.+?)".+?>(.+?)</a>', # noqa
+                r'<div class="docsum-content">.+?<a.+? class="docsum-title".+?href="(.+?)".+?>(.+?)</a>',  # noqa
                 html,
                 flags=re.S | re.DOTALL,
             )
             clean = re.compile("<.*?>")
             for header in headers:
                 title = re.sub(clean, "", header[1])
-                result.append(Item(url=self.url + header[0], id=header[0], title=title.strip()))
+                result.append(
+                    Item(
+                        url=self.url + header[0],
+                        id=header[0],
+                        title=title.strip(),
+                        provider=self.name,
+                    )
+                )
         return result

@@ -8,6 +8,7 @@ class Item(BaseModel):
     id: str
     url: str
     description: Optional[str] = ""
+    provider: Optional[str] = None
 
 
 class Feed(BaseModel):
