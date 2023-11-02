@@ -78,3 +78,22 @@ class GoogleScholar(DataProvider):
                 title = re.sub(clean, "", header[1])
                 result.append(Item(url=header[0], id=header[0], title=title))
         return result
+
+
+class PubMed(DataProvider):
+    url = "https://pubmed.ncbi.nlm.nih.gov"
+
+    async def fetch(self, query: str, start: int = 0) -> List[Item]:
+        html = await self.get(self.url, {"term": query, "sort": "date"})
+        result = []
+        if html:
+            headers = re.findall(
+                r'<div class="docsum-content">.+?<a.+? class="docsum-title".+?href="(.+?)".+?>(.+?)</a>', # noqa
+                html,
+                flags=re.S | re.DOTALL,
+            )
+            clean = re.compile("<.*?>")
+            for header in headers:
+                title = re.sub(clean, "", header[1])
+                result.append(Item(url=self.url + header[0], id=header[0], title=title.strip()))
+        return result

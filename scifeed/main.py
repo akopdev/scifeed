@@ -1,15 +1,28 @@
+import asyncio
+import itertools
+from typing import List
+
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 
-from scifeed.schemas import Feed
+from scifeed.schemas import Feed, Item
 
-from .providers import GoogleScholar
+from .providers import GoogleScholar, PubMed
 
 app = FastAPI()
 
 templates = Jinja2Templates(directory="scifeed/templates")
 
-scholar = GoogleScholar()
+providers = {
+    "scholar": GoogleScholar(),
+    "pubmed": PubMed(),
+}
+
+
+async def fetch(query: str, limit: int = 50) -> List[Item]:
+    tasks = [provider.fetch_all(query, limit=limit) for name, provider in providers.items()]
+    items = await asyncio.gather(*tasks)
+    return list(itertools.chain(*items))
 
 
 @app.get("/")
@@ -21,15 +34,13 @@ async def main(request: Request):
 async def preview(request: Request):
     results = []
     form = await request.form()
-    query = form.get("query")
-    if query:
-        results = await scholar.fetch_all(query)
+    if query := form.get("query"):
+        results = await fetch(query)
     return templates.TemplateResponse(
         "preview.html", {"request": request, "query": query, "results": results}
     )
 
 
-@app.get("/scholar")
-async def get_scholar(q: str, limit: int = 50):
-    items = await scholar.fetch_all(q, limit=limit)
-    return Feed(title=f"Google Scholar | {q}", items=items)
+@app.get("/feed")
+async def feed(q: str, limit: int = 50):
+    return Feed(title=f"Google Scholar | {q}", items=await fetch(q, limit=limit))

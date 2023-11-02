@@ -5,6 +5,16 @@ Feed will be generated in JSON format, which is supported by many RSS readers in
 
 > This project is designed to match my personal needs. If you have any suggestions, please feel free to open an issue.
 
+### Supported platforms
+
+- [x] Google scholar
+- [x] PubMed
+- [ ] ResearchGate
+- [ ] Arxiv
+- [ ] Nature
+- [ ] Science
+- [ ] ScienceDirect
+
 
 ## Installation
 
@@ -22,14 +32,4 @@ Next time you can just run the server.
 ```bash
 make start
 ```
-
-# Usage
-
-It supports several search engines, including Google Scholar. You can specify the search engine and keyword in the url, 
-for example `https://yourdomain.com/scholar?q=deep+learning`. By default, it will return last 50 results sorted by date. 
-
-You can also specify the number of results manually, by adding `&limit=100` to the url.
-
-
-
 
