@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Item(BaseModel):
@@ -9,6 +10,8 @@ class Item(BaseModel):
     url: str
     description: Optional[str] = ""
     provider: Optional[str] = None
+    published: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    authors: Optional[str] = None
 
 
 class Feed(BaseModel):

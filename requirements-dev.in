@@ -1,3 +1,9 @@
 flake8
 safety
 pydocstyle
+aioresponses
+pytest
+pytest-cov
+pytest-asyncio
+isort
+black

@@ -23,7 +23,13 @@
                 </h5>
                 <div class="card-text">{{ item.description }}</div>
             </div>
-            <div class="card-footer">{{ item.provider }}</div>
+            <div class="card-footer">
+                <div class="d-flex">
+                  <div class="me-auto text-secondary text-truncate">{{ item.authors }}</div>
+                  <div class="px-3">{{ item.published.strftime('%d.%m.%Y') }}</div>
+                  <div>{{ item.provider }}</div>
+                </div>     
+            </div>
         </div>
     </div>
     {% endfor %}
