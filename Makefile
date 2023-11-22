@@ -4,6 +4,7 @@
 .DEFAULT: help 			 		 # Running Make will run the help target
 
 PYTHON = @.venv/bin/python -m
+APP = scifeed
 
 # -------------------------------------------------------------------------------------------------
 # help: @ List available tasks on this project
@@ -11,6 +12,8 @@ PYTHON = @.venv/bin/python -m
 help:
 	@grep -oE '^#.[a-zA-Z0-9]+:.*?@ .*$$' $(MAKEFILE_LIST) | tr -d '#' |\
 	awk 'BEGIN {FS = ":.*?@ "}; {printf "  make%-10s%s\n", $$1, $$2}'
+
+all: format lint test
 	 
 # -------------------------------------------------------------------------------------------------
 # init: @ Setup local environment
@@ -62,6 +65,13 @@ test:
 	$(PYTHON) pytest tests --cov=.
 
 # -------------------------------------------------------------------------------------------------
+# format: @ Format source code and auto fix minor issues
+# -------------------------------------------------------------------------------------------------
+format:
+	$(PYTHON) black --quiet --line-length=100 $(APP)
+	$(PYTHON) isort $(APP)
+
+# -------------------------------------------------------------------------------------------------
 # lint: @ Checks the source code against coding standard rules and safety
 # -------------------------------------------------------------------------------------------------
 lint: lint.flake8 lint.safety lint.docs
@@ -78,7 +88,7 @@ lint.flake8:
 # safety 
 # -------------------------------------------------------------------------------------------------
 lint.safety: 
-	$(PYTHON) safety check --full-report -r requirements.txt
+	$(PYTHON) safety check --short-report -r requirements.txt
 
 # -------------------------------------------------------------------------------------------------
 # pydocstyle

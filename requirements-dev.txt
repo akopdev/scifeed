@@ -4,24 +4,61 @@
 #
 #    pip-compile requirements-dev.in
 #
-certifi==2023.7.22
+aiohttp==3.9.0
+    # via aioresponses
+aioresponses==0.7.6
+    # via -r requirements-dev.in
+aiosignal==1.3.1
+    # via aiohttp
+attrs==23.1.0
+    # via aiohttp
+black==22.12.0
+    # via -r requirements-dev.in
+certifi==2023.11.17
     # via requests
-charset-normalizer==3.3.1
+charset-normalizer==3.3.2
     # via requests
 click==8.1.7
-    # via safety
+    # via
+    #   black
+    #   safety
+coverage[toml]==7.3.2
+    # via pytest-cov
 dparse==0.6.3
     # via safety
 flake8==6.1.0
     # via -r requirements-dev.in
+frozenlist==1.4.0
+    # via
+    #   aiohttp
+    #   aiosignal
 idna==3.4
-    # via requests
+    # via
+    #   requests
+    #   yarl
+iniconfig==2.0.0
+    # via pytest
+isort==5.12.0
+    # via -r requirements-dev.in
 mccabe==0.7.0
     # via flake8
+multidict==6.0.4
+    # via
+    #   aiohttp
+    #   yarl
+mypy-extensions==1.0.0
+    # via black
 packaging==21.3
     # via
     #   dparse
+    #   pytest
     #   safety
+pathspec==0.11.2
+    # via black
+platformdirs==4.0.0
+    # via black
+pluggy==1.3.0
+    # via pytest
 pycodestyle==2.11.1
     # via flake8
 pydocstyle==6.3.0
@@ -30,9 +67,18 @@ pyflakes==3.1.0
     # via flake8
 pyparsing==3.1.1
     # via packaging
+pytest==7.4.3
+    # via
+    #   -r requirements-dev.in
+    #   pytest-asyncio
+    #   pytest-cov
+pytest-asyncio==0.21.1
+    # via -r requirements-dev.in
+pytest-cov==4.1.0
+    # via -r requirements-dev.in
 requests==2.31.0
     # via safety
-ruamel-yaml==0.18.3
+ruamel-yaml==0.18.5
     # via safety
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
@@ -40,8 +86,10 @@ safety==2.3.5
     # via -r requirements-dev.in
 snowballstemmer==2.2.0
     # via pydocstyle
-urllib3==2.0.7
+urllib3==2.1.0
     # via requests
+yarl==1.9.3
+    # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
