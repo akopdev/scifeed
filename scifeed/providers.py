@@ -63,10 +63,11 @@ class DataProvider:
 
 class GoogleScholar(DataProvider):
     name = "Google Scholar"
+    url = "https://scholar.google.com"
 
     async def fetch(self, query: str, start: int = 0) -> List[Item]:
         html = await self.get(
-            "https://scholar.google.com/scholar",
+            self.url,
             {"start": start, "hl": "en", "as_sdt": "0,5", "q": query, "scisbd": 1},
         )
         result = []
@@ -91,19 +92,24 @@ class PubMed(DataProvider):
         result = []
         if html:
             headers = re.findall(
-                r'<div class="docsum-content">.+?<a.+? class="docsum-title".+?href="(.+?)".+?>(.+?)</a>',  # noqa
+                r'<a\s+class="docsum-title"\s+href="([^"]*)".*?>(.*?)<\/a>.*?<span class="docsum-authors full-authors">(.*?)</span>.*?(\d{4}\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d{1,2}).*?</span>',  # noqa
                 html,
                 flags=re.S | re.DOTALL,
             )
             clean = re.compile("<.*?>")
             for header in headers:
                 title = re.sub(clean, "", header[1])
-                result.append(
-                    Item(
-                        url=self.url + header[0],
-                        id=header[0],
-                        title=title.strip(),
-                        provider=self.name,
+                try:
+                    result.append(
+                        Item(
+                            url=self.url + header[0],
+                            id=header[0],
+                            title=title.strip(),
+                            provider=self.name,
+                            authors=header[2].strip(),
+                            published=datetime.strptime(header[3], "%Y %b %d"),
+                        )
                     )
-                )
+                except Exception as e:
+                    print(e)
         return result
