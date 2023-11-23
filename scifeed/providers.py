@@ -24,6 +24,8 @@ class DataProvider:
 
     _cache_timeout = 60
 
+    size = 50
+
     def __init__(self):
         self._cache: Dict[str, Tuple[datetime, Dict[str, str]]] = {}
 
@@ -51,7 +53,7 @@ class DataProvider:
         if cached := self._cache.get(key):
             if cached[0] >= datetime.utcnow():
                 return cached[1]
-        tasks = [self.fetch(query, page) for page in range(start, limit, 10)]
+        tasks = [self.fetch(query, page) for page in range(start, limit, self.size)]
         items = await asyncio.gather(*tasks)
         result = list(itertools.chain(*items))
         self._cache[key] = (
@@ -120,7 +122,17 @@ class Arxiv(DataProvider):
     url = "https://arxiv.org/search/"
 
     async def fetch(self, query: str, start: int = 0) -> List[Item]:
-        html = await self.get(self.url, {"query": query, "searchtype": "all", "source": "header"})
+        html = await self.get(
+            self.url,
+            {
+                "query": query,
+                "searchtype": "all",
+                "source": "header",
+                "start": start,
+                "size": 50,
+                "order": "-submitted_date",
+            },
+        )
         result = []
         if html:
             headers = re.findall(
@@ -131,7 +143,7 @@ class Arxiv(DataProvider):
             clean = re.compile("<.*?>")
             for header in headers:
                 title = re.sub(clean, "", header[1])
-                authors = re.sub(clean, "", header[2])
+                authors = re.sub(re.compile("\\s*<.*?>\\s*"), "", header[2])
                 try:
                     result.append(
                         Item(
