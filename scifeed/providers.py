@@ -24,6 +24,8 @@ class DataProvider:
 
     _cache_timeout = 60
 
+    size = 50
+
     def __init__(self):
         self._cache: Dict[str, Tuple[datetime, Dict[str, str]]] = {}
 
@@ -51,7 +53,7 @@ class DataProvider:
         if cached := self._cache.get(key):
             if cached[0] >= datetime.utcnow():
                 return cached[1]
-        tasks = [self.fetch(query, page) for page in range(start, limit, 10)]
+        tasks = [self.fetch(query, page) for page in range(start, limit, self.size)]
         items = await asyncio.gather(*tasks)
         result = list(itertools.chain(*items))
         self._cache[key] = (
@@ -112,4 +114,47 @@ class PubMed(DataProvider):
                     )
                 except Exception as e:
                     print(e)
+        return result
+
+
+class Arxiv(DataProvider):
+    name = "Arxiv"
+    url = "https://arxiv.org/search/"
+
+    async def fetch(self, query: str, start: int = 0) -> List[Item]:
+        html = await self.get(
+            self.url,
+            {
+                "query": query,
+                "searchtype": "all",
+                "source": "header",
+                "start": start,
+                "size": 50,
+                "order": "-submitted_date",
+            },
+        )
+        result = []
+        if html:
+            headers = re.findall(
+                r'<p class="list-title is-inline-block"><a href="(.+?)">.+?</a>.*?<p class="title is-5 mathjax">(.+?)</p>\s+<p class="authors">\s+<span class="(has-text-black-bis has-text-weight-semibold|search-hit)">Authors:</span>\s(.*?)</p>.*?<p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted<\/span>.*?([a-zA-Z0-9, ]+);\s',  # noqa
+                html,
+                flags=re.S | re.DOTALL,
+            )
+            clean = re.compile("<.*?>")
+            for header in headers:
+                title = re.sub(clean, "", header[1])
+                authors = re.sub(re.compile("\\s*<.*?>\\s*"), "", header[3])
+                try:
+                    result.append(
+                        Item(
+                            url=header[0],
+                            id=header[0],
+                            title=title.strip(),
+                            provider=self.name,
+                            authors=", ".join(authors.split(",")),
+                            published=datetime.strptime(header[4].strip(), "%d %B, %Y"),
+                        )
+                    )
+                except Exception as e:
+                    print(str(e))
         return result
