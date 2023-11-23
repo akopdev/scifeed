@@ -113,3 +113,36 @@ class PubMed(DataProvider):
                 except Exception as e:
                     print(e)
         return result
+
+
+class Arxiv(DataProvider):
+    name = "Arxiv"
+    url = "https://arxiv.org/search/"
+
+    async def fetch(self, query: str, start: int = 0) -> List[Item]:
+        html = await self.get(self.url, {"query": query, "searchtype": "all", "source": "header"})
+        result = []
+        if html:
+            headers = re.findall(
+                r'<p class="list-title is-inline-block"><a href="(.+?)">.+?</a>.*?<p class="title is-5 mathjax">(.*?)</p>\s+<p class="authors">\s+<span class="has-text-black-bis has-text-weight-semibold">Authors:</span>\s(.*?)</p>.*?<p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted<\/span>.*?([a-zA-Z0-9, ]+);\s',
+                html,
+                flags=re.S | re.DOTALL,
+            )
+            clean = re.compile("<.*?>")
+            for header in headers:
+                title = re.sub(clean, "", header[1])
+                authors = re.sub(clean, "", header[2])
+                try:
+                    result.append(
+                        Item(
+                            url=header[0],
+                            id=header[0],
+                            title=title.strip(),
+                            provider=self.name,
+                            authors=", ".join(authors.split(",")),
+                            published=datetime.strptime(header[3].strip(), "%d %B, %Y"),
+                        )
+                    )
+                except Exception as e:
+                    print(str(e))
+        return result
