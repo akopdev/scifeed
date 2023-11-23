@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 from scifeed.schemas import Feed, Item
 
-from .providers import GoogleScholar, PubMed
+from .providers import Arxiv, GoogleScholar, PubMed
 
 app = FastAPI()
 
@@ -16,13 +16,16 @@ templates = Jinja2Templates(directory="scifeed/templates")
 providers = {
     "scholar": GoogleScholar(),
     "pubmed": PubMed(),
+    "arxiv": Arxiv(),
 }
 
 
 async def fetch(query: str, limit: int = 50) -> List[Item]:
     tasks = [provider.fetch_all(query, limit=limit) for name, provider in providers.items()]
     items = await asyncio.gather(*tasks)
-    return list(itertools.chain(*items))
+    results = list(itertools.chain(*items))
+    results.sort(key=lambda x: x.published, reverse=True)
+    return results
 
 
 @app.get("/")
