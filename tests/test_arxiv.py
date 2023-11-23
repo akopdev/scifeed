@@ -142,7 +142,7 @@ async def test_pubmed_fetch():
     ax = Arxiv()
     with aioresponses() as m:
         m.get(
-            "https://arxiv.org/search/?query=test&searchtype=all&source=header",
+            "https://arxiv.org/search/?order=-submitted_date&query=test&searchtype=all&size=50&source=header&start=0",
             body=raw_html,
             status=200,
         )
