@@ -136,14 +136,14 @@ class Arxiv(DataProvider):
         result = []
         if html:
             headers = re.findall(
-                r'<p class="list-title is-inline-block"><a href="(.+?)">.+?</a>.*?<p class="title is-5 mathjax">(.*?)</p>\s+<p class="authors">\s+<span class="has-text-black-bis has-text-weight-semibold">Authors:</span>\s(.*?)</p>.*?<p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted<\/span>.*?([a-zA-Z0-9, ]+);\s',
+                r'<p class="list-title is-inline-block"><a href="(.+?)">.+?</a>.*?<p class="title is-5 mathjax">(.+?)</p>\s+<p class="authors">\s+<span class="(has-text-black-bis has-text-weight-semibold|search-hit)">Authors:</span>\s(.*?)</p>.*?<p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted<\/span>.*?([a-zA-Z0-9, ]+);\s',  # noqa
                 html,
                 flags=re.S | re.DOTALL,
             )
             clean = re.compile("<.*?>")
             for header in headers:
                 title = re.sub(clean, "", header[1])
-                authors = re.sub(re.compile("\\s*<.*?>\\s*"), "", header[2])
+                authors = re.sub(re.compile("\\s*<.*?>\\s*"), "", header[3])
                 try:
                     result.append(
                         Item(
@@ -152,7 +152,7 @@ class Arxiv(DataProvider):
                             title=title.strip(),
                             provider=self.name,
                             authors=", ".join(authors.split(",")),
-                            published=datetime.strptime(header[3].strip(), "%d %B, %Y"),
+                            published=datetime.strptime(header[4].strip(), "%d %B, %Y"),
                         )
                     )
                 except Exception as e:
