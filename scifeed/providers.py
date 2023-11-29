@@ -90,7 +90,10 @@ class PubMed(DataProvider):
     url = "https://pubmed.ncbi.nlm.nih.gov"
 
     async def fetch(self, query: str, start: int = 0) -> List[Item]:
-        html = await self.get(self.url, {"term": query, "sort": "date"})
+        html = await self.get(
+            self.url,
+            {"term": query, "sort": "date", "size": self.size, "page": start // self.size + 1},
+        )
         result = []
         if html:
             headers = re.findall(
@@ -129,7 +132,7 @@ class Arxiv(DataProvider):
                 "searchtype": "all",
                 "source": "header",
                 "start": start,
-                "size": 50,
+                "size": self.size,
                 "order": "-submitted_date",
             },
         )

@@ -305,7 +305,7 @@ async def test_pubmed_fetch():
     pm = PubMed()
     with aioresponses() as m:
         m.get(
-            "https://pubmed.ncbi.nlm.nih.gov?term=test&sort=date",
+            "https://pubmed.ncbi.nlm.nih.gov?term=test&sort=date&size=50&page=1",
             body=raw_html,
             status=200,
         )
