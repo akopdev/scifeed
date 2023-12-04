@@ -161,3 +161,42 @@ class Arxiv(DataProvider):
                 except Exception as e:
                     print(str(e))
         return result
+
+
+class PapersWithCode(DataProvider):
+    name = "PapersWithCode"
+    url = "https://paperswithcode.com/search"
+    size = 10
+
+    async def fetch(self, query: str, start: int = 0) -> List[Item]:
+        html = await self.get(
+            self.url,
+            {
+                "q": query,
+                "sort_by": "trending",
+                "page": start // self.size + 1,
+            },
+        )
+        result = []
+        if html:
+            headers = re.findall(
+                r'<div class="row infinite-item item paper-card">.*?<h1><a href="(.+?)">(.+?)</a></h1>.*?<span class="author-name-text item-date-pub">(.+?)</span>',  # noqa
+                html,
+                flags=re.S | re.DOTALL,
+            )
+            clean = re.compile("<.*?>")
+            for header in headers:
+                title = re.sub(clean, "", header[1])
+                try:
+                    result.append(
+                        Item(
+                            url="https://paperswithcode.com" + header[0],
+                            id=header[0],
+                            title=title.strip(),
+                            provider=self.name,
+                            published=datetime.strptime(header[2].strip(), "%d %b %Y"),
+                        )
+                    )
+                except Exception as e:
+                    print(str(e))
+        return result
