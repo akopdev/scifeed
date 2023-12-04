@@ -13,7 +13,7 @@ app = FastAPI()
 
 templates = Jinja2Templates(directory="scifeed/templates")
 
-providers = {
+data_providers = {
     "scholar": GoogleScholar(),
     "pubmed": PubMed(),
     "arxiv": Arxiv(),
@@ -21,8 +21,8 @@ providers = {
 }
 
 
-async def fetch(query: str, limit: int = 50) -> List[Item]:
-    tasks = [provider.fetch_all(query, limit=limit) for name, provider in providers.items()]
+async def fetch(query: str, limit: int = 50, providers: List[str] = []) -> List[Item]:
+    tasks = [data_providers[provider].fetch_all(query, limit=limit) for provider in providers]
     items = await asyncio.gather(*tasks)
     results = list(itertools.chain(*items))
     results.sort(key=lambda x: x.published, reverse=True)
@@ -38,10 +38,12 @@ async def main(request: Request):
 async def preview(request: Request):
     results = []
     form = await request.form()
+    providers = form.getlist("provider") or list(data_providers.keys())
     if query := form.get("query"):
-        results = await fetch(query)
+        results = await fetch(query, providers=providers)
     return templates.TemplateResponse(
-        "preview.html", {"request": request, "query": query, "results": results}
+        "preview.html",
+        {"request": request, "query": query, "providers": providers, "results": results},
     )
 
 
