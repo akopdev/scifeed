@@ -21,11 +21,12 @@
 <body class="bg-light">
   <main>
     <header class="sticky-top shadow-sm">
+      <form role="search" method="post">
       <div class="bg-body-tertiary border-bottom border-body">
         <div class="container">
           <nav class="navbar row">
             <a class="navbar-brand col-1 d-none d-sm-block" href="/">SciFeed</a>
-            <form class="d-flex navbar-form navbar-right col-12 col-sm-10" role="search" method="post">
+            <div class="d-flex navbar-form navbar-right col-12 col-sm-10">
               <div class="input-group">
                 <input type="text" name="query" value="{{ query }}" class="form-control rounded-0 shadow-none" aria-label="query"
                   autofocus>
@@ -33,11 +34,12 @@
                       class="bi bi-search"></i></button></span>
               </div>
               <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-            </form>
+            </div>
           </nav>
         </div>
       </div>
       {% block subheader %}{% endblock %}
+      </form>
     </header>
     <div class="py-3">
       <div class="container">
