@@ -10,6 +10,7 @@ Feed will be generated in JSON format, which is supported by many RSS readers in
 - [x] Google scholar
 - [x] PubMed
 - [x] Arxiv
+- [x] PapersWithCode
 - [ ] ResearchGate
 - [ ] Nature
 - [ ] Science
