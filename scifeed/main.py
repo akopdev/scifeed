@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 from scifeed.schemas import Feed, Item
 
-from .providers import Arxiv, GoogleScholar, PubMed
+from .providers import Arxiv, GoogleScholar, PapersWithCode, PubMed
 
 app = FastAPI()
 
@@ -17,6 +17,7 @@ providers = {
     "scholar": GoogleScholar(),
     "pubmed": PubMed(),
     "arxiv": Arxiv(),
+    "paperswithcode": PapersWithCode(),
 }
 
 
