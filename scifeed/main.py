@@ -1,5 +1,6 @@
 import asyncio
 import itertools
+from os import path
 from typing import List
 
 from fastapi import FastAPI, Request
@@ -10,7 +11,7 @@ from .schemas import Feed, Item
 
 app = FastAPI()
 
-templates = Jinja2Templates(directory="scifeed/templates")
+templates = Jinja2Templates(directory=path.join(path.dirname(__file__), "templates"))
 
 data_providers = {
     "scholar": GoogleScholar(),
