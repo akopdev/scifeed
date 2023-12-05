@@ -34,3 +34,9 @@ Next time you can just run the server.
 make start
 ```
 
+If you prefer to use docker, you can run the following command.
+
+```bash
+make build run
+```
+
