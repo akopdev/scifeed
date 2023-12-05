@@ -1,6 +1,5 @@
 fastapi
 uvicorn
 aiohttp
-azure-functions
 jinja2
 python-multipart
