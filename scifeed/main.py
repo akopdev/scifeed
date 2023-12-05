@@ -5,9 +5,8 @@ from typing import List
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 
-from scifeed.schemas import Feed, Item
-
 from .providers import Arxiv, GoogleScholar, PapersWithCode, PubMed
+from .schemas import Feed, Item
 
 app = FastAPI()
 
