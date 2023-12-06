@@ -200,3 +200,14 @@ class PapersWithCode(DataProvider):
                 except Exception as e:
                     print(str(e))
         return result
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#  Provider registry
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Providers = {
+    "scholar": GoogleScholar(),
+    "pubmed": PubMed(),
+    "arxiv": Arxiv(),
+    "paperswithcode": PapersWithCode(),
+}
