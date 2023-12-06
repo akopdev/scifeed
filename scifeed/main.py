@@ -42,9 +42,7 @@ async def preview(request: Request):
     query = form.get("query")
     providers = form.getlist("provider") or list(Providers.keys())
     if query:
-        results = await fetch(
-            query, providers=[Provider(provider) for provider in providers]
-        )
+        results = await fetch(query, providers=[Provider(provider) for provider in providers])
     return templates.TemplateResponse(
         "preview.html",
         {
