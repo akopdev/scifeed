@@ -3,22 +3,16 @@
 <nav class="border-bottom bg-body">
     <div class="container d-flex flex-wrap">
         <div class="nav p-2 me-auto">
+        {% for id, provider in all_providers.items() %}
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="pubmed" name="provider" value="pubmed" {{ "checked" if  "pubmed" in providers }}>
-                <label class="form-check-label" for="pubmed">PubMed</label>
+                <input class="form-check-input" type="checkbox" id="{{ id }}" name="provider" value="{{ id }}" {{ "checked" if id in providers }}>
+                <label class="form-check-label" for="{{ id }}">{{ provider.name }}</label>
             </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="arxiv" name="provider" value="arxiv"  {{ "checked" if  "arxiv" in providers }}>
-                <label class="form-check-label" for="arxiv">Arxiv</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="paperswithcode" name="provider" value="paperswithcode" {{ "checked" if "paperswithcode" in providers }}>
-                <label class="form-check-label" for="paperswithcode">PapersWithCode</label>
-            </div>
+        {% endfor %}
         </div>
         <ul class="nav">
             <li class="nav-item">
-                <a href="/feed?q={{ query }}" target="blank" class="nav-link link-body-emphasis px-2"><i class="bi bi-rss-fill"></i> Subscribe</a>
+                <a href="/feed?q={{ query }}{% for p in providers %}&providers={{ p }}{% endfor %}" target="blank" class="nav-link link-body-emphasis px-2"><i class="bi bi-rss-fill"></i> Subscribe</a>
             </li>
         </ul>
     </div>
