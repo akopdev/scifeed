@@ -1,9 +1,12 @@
 flake8
 safety
 pydocstyle
-aioresponses
 pytest
 pytest-cov
 pytest-asyncio
 isort
 black
+packaging>=23.2
+pytest-playwright
+pytest-playwright-async
+

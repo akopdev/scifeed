@@ -45,12 +45,13 @@ compile:
 # -------------------------------------------------------------------------------------------------
 install:
 	$(PYTHON) piptools sync requirements.txt requirements-dev.txt
+	$(PYTHON) playwright install
 
 # -------------------------------------------------------------------------------------------------
 # start: @ Run the application without docker
 # -------------------------------------------------------------------------------------------------
 start: activate
-	@uvicorn scifeed.main:app --reload
+	$(PYTHON) uvicorn scifeed.main:app --reload
 
 # -------------------------------------------------------------------------------------------------
 # build: @ Build docker image
