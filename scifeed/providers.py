@@ -232,6 +232,49 @@ class ResearchGate(DataProvider):
         return result
 
 
+class ScienceDirect(DataProvider):
+    name = "ScienceDirect"
+    url = "https://www.sciencedirect.com/search"
+
+    async def fetch(self, query: str, start: int = 0) -> List[Item]:
+        html = await self.get(
+            self.url,
+            {
+                "qs": query,
+                "offset": start * self.size,
+            },
+        )
+        result = []
+        if html:
+            selector = Selector(text=html)
+            clean = re.compile("<.*?>")
+            for item in selector.css(".ResultItem"):
+                try:
+                    url = item.css(".result-list-title-link::attr(href)").get()
+                    title = re.sub(
+                        clean, "", item.css(".result-list-title-link .anchor-text").get()
+                    )
+                    result.append(
+                        Item(
+                            url=f"https://www.sciencedirect.com{url}",
+                            id=url,
+                            title=title,
+                            provider=self.name,
+                            # TODO: clean date before processing
+                            # published=datetime.strptime(
+                            #     str(item.css(".srctitle-date-fields span::text").getall()[1]),
+                            #     "%d %B %Y",
+                            # ),
+                            authors=", ".join(item.css(".Authors .author::text").getall()),
+                        )
+                    )
+                except Exception as e:
+                    raise Exception(e)
+                    print(str(e))
+
+        return result
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  Provider registry
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -240,4 +283,5 @@ Providers = {
     "arxiv": Arxiv(),
     "paperswithcode": PapersWithCode(),
     "researchgate": ResearchGate(),
+    "sciencedirect": ScienceDirect(),
 }
