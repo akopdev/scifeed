@@ -2,18 +2,17 @@ from datetime import datetime
 
 import pytest
 
-from scifeed.providers import Arxiv
+from scifeed.providers import Arxiv, Crawler
 
 
-async def handle(route):
-    await route.fulfill(path="tests/static/arxiv.html")
+class CrawlerMock(Crawler):
+    async def open(self, *args, **kwargs):
+        return open("tests/static/arxiv.html").read()
 
 
 @pytest.mark.asyncio()
-async def test_arxiv_fetch(page_async):
-    await page_async.route("https://arxiv.org/**", handle)
-
-    ax = Arxiv(page_async)
+async def test_arxiv_fetch():
+    ax = Arxiv(CrawlerMock())
     items = await ax.fetch("test")
     assert len(items) == 2
     assert "Designing and evaluating an online reinforcement learning agent for" in items[0].title

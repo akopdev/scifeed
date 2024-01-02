@@ -3,15 +3,15 @@ import itertools
 import random
 import re
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 from parsel import Selector
-from playwright.async_api import async_playwright
+from playwright.async_api import TimeoutError, async_playwright
 
 from .schemas import Item
 
 
-class DataProvider:
+class Crawler:
     _user_agents = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",  # noqa
         "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36",  # noqa
@@ -23,28 +23,56 @@ class DataProvider:
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15",  # noqa
     ]
 
+    @property
+    def started(self) -> bool:
+        return self.browser is not None
+
+    def __init__(self, browser=None):
+        self.browser = browser
+
+    async def start(self, engine: Literal["chromium", "firefox", "webkit"] = "chromium"):
+        core = await async_playwright().start()
+        browser = getattr(core, engine)
+        self.browser = await browser.launch(headless=True, slow_mo=50)
+
+    async def open(self, url: str) -> Optional[str]:
+        if not self.started:
+            return
+        page = await self.browser.new_page(user_agent=random.choice(self._user_agents))
+        try:
+            await page.goto(url)
+        except TimeoutError:
+            print("Timeout error")
+            await self.end()
+            return
+        return await page.content()
+
+    async def end(self):
+        await self.browser.close()
+        self.browser = None
+
+
+class DataProvider:
     _cache_timeout = 60
 
     size = 50
 
-    def __init__(self, page=None):
+    def __init__(self, crawler: Optional[Crawler] = None):
         self._cache: Dict[str, Tuple[datetime, Dict[str, str]]] = {}
-        self.page = page
+        self.crawler = crawler if isinstance(crawler, Crawler) else Crawler()
 
     def encode_query(self, query: str) -> str:
         return query.replace(" ", "").lower()
 
     async def get(self, url: str, params: Dict[str, Any]) -> str:
         """Get data from a URL with random user agent."""
-        async with async_playwright() as playwright:
-            chromium = playwright.chromium  # or "firefox" or "webkit".
-            browser = await chromium.launch(headless=True, slow_mo=50)
-            page = self.page or await browser.new_page(user_agent=random.choice(self._user_agents))
-            # encode url and params into a single string
-            link = url + "?" + "&".join([f"{k}={v}" for k, v in params.items()])
-            await page.goto(link)
-            return await page.content()
-        await browser.close()  # TODO: deal with closing browser
+        if not self.crawler.started:
+            print("Starting crawler from scratch")
+            await self.crawler.start()
+        content = await self.crawler.open(
+            url + "?" + "&".join([f"{k}={v}" for k, v in params.items()])
+        )
+        return content
 
     async def fetch(self, query: str, start: int = 0) -> List[Item]:
         """Fetch results for a given query from a single page."""
@@ -273,15 +301,3 @@ class ScienceDirect(DataProvider):
                     print(str(e))
 
         return result
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Provider registry
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Providers = {
-    "pubmed": PubMed(),
-    "arxiv": Arxiv(),
-    "paperswithcode": PapersWithCode(),
-    "researchgate": ResearchGate(),
-    "sciencedirect": ScienceDirect(),
-}

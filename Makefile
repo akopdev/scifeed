@@ -69,7 +69,7 @@ run: build
 # test: @ Run tests using pytest
 # -------------------------------------------------------------------------------------------------
 test:
-	$(PYTHON) pytest tests --cov=.
+	$(PYTHON) pytest tests --cov=. -x
 
 # -------------------------------------------------------------------------------------------------
 # format: @ Format source code and auto fix minor issues

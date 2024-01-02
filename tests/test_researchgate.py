@@ -1,17 +1,16 @@
 import pytest
-from playwright.async_api import Page
 
-from scifeed.providers import ResearchGate
+from scifeed.providers import Crawler, ResearchGate
 
 
-async def handle(route):
-    await route.fulfill(path="tests/static/researchgate.html")
+class CrawlerMock(Crawler):
+    async def open(self, *args, **kwargs):
+        return open("tests/static/researchgate.html").read()
 
 
 @pytest.mark.asyncio()
-async def test_researchgate_fetch(page_async: Page):
-    await page_async.route("https://www.researchgate.net/**", handle)
-    rg = ResearchGate(page=page_async)
+async def test_researchgate_fetch():
+    rg = ResearchGate(CrawlerMock())
     items = await rg.fetch("test")
     assert len(items) == 10
     assert "Elagolix for endometriosis: all that glitters is not gold" in items[0].title

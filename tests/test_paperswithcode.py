@@ -2,17 +2,17 @@ from datetime import datetime
 
 import pytest
 
-from scifeed.providers import PapersWithCode
+from scifeed.providers import Crawler, PapersWithCode
 
 
-async def handle(route):
-    await route.fulfill(path="tests/static/paperswithcode.html")
+class CrawlerMock(Crawler):
+    async def open(self, *args, **kwargs):
+        return open("tests/static/paperswithcode.html").read()
 
 
 @pytest.mark.asyncio()
-async def test_paperswithcode_fetch(page_async):
-    await page_async.route("https://paperswithcode.com/**", handle)
-    pm = PapersWithCode(page_async)
+async def test_paperswithcode_fetch():
+    pm = PapersWithCode(CrawlerMock())
     items = await pm.fetch("test")
     assert len(items) == 2
     assert (
