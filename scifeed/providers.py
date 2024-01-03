@@ -3,14 +3,15 @@ import itertools
 import random
 import re
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
-import aiohttp
+from parsel import Selector
+from playwright.async_api import TimeoutError, async_playwright
 
 from .schemas import Item
 
 
-class DataProvider:
+class Crawler:
     _user_agents = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",  # noqa
         "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36",  # noqa
@@ -22,26 +23,56 @@ class DataProvider:
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15",  # noqa
     ]
 
+    @property
+    def started(self) -> bool:
+        return self.browser is not None
+
+    def __init__(self, browser=None):
+        self.browser = browser
+
+    async def start(self, engine: Literal["chromium", "firefox", "webkit"] = "chromium"):
+        core = await async_playwright().start()
+        browser = getattr(core, engine)
+        self.browser = await browser.launch(headless=True, slow_mo=50)
+
+    async def open(self, url: str) -> Optional[str]:
+        if not self.started:
+            return
+        page = await self.browser.new_page(user_agent=random.choice(self._user_agents))
+        try:
+            await page.goto(url)
+        except TimeoutError:
+            print("Timeout error")
+            await self.end()
+            return
+        return await page.content()
+
+    async def end(self):
+        await self.browser.close()
+        self.browser = None
+
+
+class DataProvider:
     _cache_timeout = 60
 
     size = 50
 
-    def __init__(self):
+    def __init__(self, crawler: Optional[Crawler] = None):
         self._cache: Dict[str, Tuple[datetime, Dict[str, str]]] = {}
+        self.crawler = crawler if isinstance(crawler, Crawler) else Crawler()
 
     def encode_query(self, query: str) -> str:
         return query.replace(" ", "").lower()
 
     async def get(self, url: str, params: Dict[str, Any]) -> str:
         """Get data from a URL with random user agent."""
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                url,
-                headers={"User-Agent": random.choice(self._user_agents)},
-                params=params,
-            ) as resp:
-                if resp.status == 200:
-                    return await resp.text()
+        if not self.crawler.started:
+            print("Starting crawler from scratch")
+            await self.crawler.start()
+        content = await self.crawler.open(
+            url + "?" + "&".join([f"{k}={v}" for k, v in params.items()])
+        )
+        return content
 
     async def fetch(self, query: str, start: int = 0) -> List[Item]:
         """Fetch results for a given query from a single page."""
@@ -60,28 +91,6 @@ class DataProvider:
             datetime.utcnow() + timedelta(minutes=self._cache_timeout),
             result,
         )
-        return result
-
-
-class GoogleScholar(DataProvider):
-    name = "Google Scholar"
-    url = "https://scholar.google.com"
-
-    async def fetch(self, query: str, start: int = 0) -> List[Item]:
-        html = await self.get(
-            self.url,
-            {"start": start, "hl": "en", "as_sdt": "0,5", "q": query, "scisbd": 1},
-        )
-        result = []
-        if html:
-            headers = re.findall(
-                r'<h3 class="gs_rt".*?><a id=".*?" href="(.*?)" .*?>(.*?)</a>.*?</h3>',
-                html,
-            )
-            clean = re.compile("<.*?>")
-            for header in headers:
-                title = re.sub(clean, "", header[1])
-                result.append(Item(url=header[0], id=header[0], title=title, provider=self.name))
         return result
 
 
@@ -202,12 +211,93 @@ class PapersWithCode(DataProvider):
         return result
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Provider registry
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Providers = {
-    "scholar": GoogleScholar(),
-    "pubmed": PubMed(),
-    "arxiv": Arxiv(),
-    "paperswithcode": PapersWithCode(),
-}
+class ResearchGate(DataProvider):
+    name = "ResearchGate"
+    url = "https://www.researchgate.net/search/publication"
+
+    async def fetch(self, query: str, start: int = 0) -> List[Item]:
+        html = await self.get(
+            self.url,
+            {
+                "q": query,
+                "page": start // self.size + 1,
+            },
+        )
+        result = []
+        if html:
+            selector = Selector(text=html)
+
+            for item in selector.css(".nova-legacy-v-publication-item"):
+                try:
+                    print()
+                    url = item.css(
+                        ".nova-legacy-v-publication-item__stack-item a::attr(href)"
+                    ).get()
+                    result.append(
+                        Item(
+                            url=f"https://www.researchgate.net/{url}",
+                            id=url,
+                            title=item.css(
+                                ".nova-legacy-v-publication-item__stack-item a::text"
+                            ).get(),
+                            provider=self.name,
+                            published=datetime.strptime(
+                                item.css(
+                                    ".nova-legacy-v-publication-item__meta-data-item span::text"
+                                ).get(),
+                                "%b %Y",
+                            ),
+                            authors=", ".join(
+                                item.css(
+                                    ".nova-legacy-v-person-inline-item__fullname::text"
+                                ).getall()
+                            ),
+                        )
+                    )
+                except Exception as e:
+                    print(str(e))
+
+        return result
+
+
+class ScienceDirect(DataProvider):
+    name = "ScienceDirect"
+    url = "https://www.sciencedirect.com/search"
+
+    async def fetch(self, query: str, start: int = 0) -> List[Item]:
+        html = await self.get(
+            self.url,
+            {
+                "qs": query,
+                "offset": start * self.size,
+            },
+        )
+        result = []
+        if html:
+            selector = Selector(text=html)
+            clean = re.compile("<.*?>")
+            for item in selector.css(".ResultItem"):
+                try:
+                    url = item.css(".result-list-title-link::attr(href)").get()
+                    title = re.sub(
+                        clean, "", item.css(".result-list-title-link .anchor-text").get()
+                    )
+                    result.append(
+                        Item(
+                            url=f"https://www.sciencedirect.com{url}",
+                            id=url,
+                            title=title,
+                            provider=self.name,
+                            # TODO: clean date before processing
+                            # published=datetime.strptime(
+                            #     str(item.css(".srctitle-date-fields span::text").getall()[1]),
+                            #     "%d %B %Y",
+                            # ),
+                            authors=", ".join(item.css(".Authors .author::text").getall()),
+                        )
+                    )
+                except Exception as e:
+                    raise Exception(e)
+                    print(str(e))
+
+        return result

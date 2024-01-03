@@ -7,14 +7,11 @@ Feed will be generated in JSON format, which is supported by many RSS readers in
 
 ### Supported platforms
 
-- [x] Google scholar
 - [x] PubMed
 - [x] Arxiv
 - [x] PapersWithCode
-- [ ] ResearchGate
-- [ ] Nature
-- [ ] Science
-- [ ] ScienceDirect
+- [x] ResearchGate
+- [x] ScienceDirect
 
 
 ## Installation

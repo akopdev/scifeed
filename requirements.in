@@ -1,5 +1,7 @@
 fastapi
 uvicorn
-aiohttp
 jinja2
 python-multipart
+parsel 
+playwright
+packaging>=23.2

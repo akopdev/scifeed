@@ -7,16 +7,36 @@ from typing import Annotated, List
 from fastapi import FastAPI, Query, Request
 from fastapi.templating import Jinja2Templates
 
-from .providers import Providers
+from .providers import (Arxiv, Crawler, PapersWithCode, PubMed, ResearchGate,
+                        ScienceDirect)
 from .schemas import Feed, Item
 
 app = FastAPI()
 
 templates = Jinja2Templates(directory=path.join(path.dirname(__file__), "templates"))
 
+# Start single crawler instance and share it between providers
+crawler = Crawler()
+
+Providers = {}
+
+
+@app.on_event("startup")
+async def init():
+    global Providers, Provider
+    await crawler.start()
+    Providers = {
+        "pubmed": PubMed(crawler),
+        "arxiv": Arxiv(crawler),
+        "paperswithcode": PapersWithCode(crawler),
+        "researchgate": ResearchGate(crawler),
+        "sciencedirect": ScienceDirect(crawler),
+    }
+
+
 Provider = Enum(
     "Provider",
-    [(id, id) for id in Providers.keys()],
+    [(id, id) for id in ["pubmed", "arxiv", "paperswithcode", "researchgate", "sciencedirect"]],
 )
 
 
